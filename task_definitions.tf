@@ -5,16 +5,16 @@ resource "aws_ecs_task_definition" "main" {
 
   requires_compatibilities = var.capabilities
 
-  cpu = var.service_cpu
+  cpu    = var.service_cpu
   memory = var.service_memory
 
   execution_role_arn = aws_iam_role.service_execution_role.arn
-  task_role_arn = var.service_task_execution_role
+  task_role_arn      = var.service_task_execution_role
 
   container_definitions = jsonencode([
     {
       name   = var.service_name
-      image = format("%s:latest", aws_ecr_repository.main.repository_url)
+      image  = format("%s:latest", aws_ecr_repository.main.repository_url)
       cpu    = var.service_cpu
       memory = var.service_memory
 
