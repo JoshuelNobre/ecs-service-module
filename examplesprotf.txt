@@ -1,0 +1,272 @@
+# =========================================
+# EXEMPLO DE USO DO MÓDULO ECS SERVICE
+# =========================================
+# Este arquivo mostra como usar o módulo ecs-service-module
+
+# Configuração do provider AWS
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  required_version = ">= 1.0"
+}
+
+# Configuração do provider AWS
+provider "aws" {
+  region = var.aws_region
+}
+
+# Variáveis necessárias para o exemplo
+variable "aws_region" {
+  description = "Região AWS"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "vpc_id" {
+  description = "ID da VPC existente"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "IDs das subnets privadas"
+  type        = list(string)
+}
+
+variable "alb_listener_arn" {
+  description = "ARN do listener do ALB existente"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Nome do domínio para a aplicação"
+  type        = string
+  default     = "api.exemplo.com"
+}
+
+# Dados externos necessários
+data "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
+}
+
+# =========================================
+# EXEMPLO 1: API Node.js em desenvolvimento
+# =========================================
+module "api_nodejs_dev" {
+  source = "../"  # Caminho para o módulo
+
+  # Configurações básicas
+  region       = var.aws_region
+  service_name = "nodejs-api"
+  cluster_name = "dev-cluster"
+
+  # Rede
+  vpc_id          = var.vpc_id
+  private_subnets = var.private_subnet_ids
+
+  # Configurações do container
+  service_port   = 3000
+  service_cpu    = 256    # 0.25 vCPU
+  service_memory = 512    # 512 MB
+
+  # Load Balancer
+  service_listener = var.alb_listener_arn
+  service_hosts    = ["dev-${var.domain_name}"]
+
+  # Execução
+  service_task_execution_role = data.aws_iam_role.ecs_task_execution_role.arn
+  service_launch_type         = "FARGATE"
+  service_task_count          = 1
+
+  # Variáveis de ambiente
+  environment_variables = [
+    {
+      name  = "NODE_ENV"
+      value = "development"
+    },
+    {
+      name  = "PORT"
+      value = "3000"
+    },
+    {
+      name  = "LOG_LEVEL"
+      value = "debug"
+    }
+  ]
+
+  # Health check customizado
+  service_healthcheck = {
+    healthy_threshold   = "2"
+    unhealthy_threshold = "3"
+    timeout             = "5"
+    interval            = "30"
+    matcher             = "200"
+    path                = "/api/health"
+  }
+}
+
+# =========================================
+# EXEMPLO 2: API Python Flask em produção
+# =========================================
+module "api_python_prod" {
+  source = "../"  # Caminho para o módulo
+
+  # Configurações básicas
+  region       = var.aws_region
+  service_name = "python-api"
+  cluster_name = "prod-cluster"
+
+  # Rede
+  vpc_id          = var.vpc_id
+  private_subnets = var.private_subnet_ids
+
+  # Configurações do container (recursos maiores para produção)
+  service_port   = 8000
+  service_cpu    = 512    # 0.5 vCPU
+  service_memory = 1024   # 1 GB
+
+  # Load Balancer
+  service_listener = var.alb_listener_arn
+  service_hosts    = [var.domain_name, "www.${var.domain_name}"]
+
+  # Execução (múltiplas tasks para alta disponibilidade)
+  service_task_execution_role = data.aws_iam_role.ecs_task_execution_role.arn
+  service_launch_type         = "FARGATE"
+  service_task_count          = 3
+
+  # Variáveis de ambiente
+  environment_variables = [
+    {
+      name  = "FLASK_ENV"
+      value = "production"
+    },
+    {
+      name  = "PORT"
+      value = "8000"
+    },
+    {
+      name  = "WORKERS"
+      value = "4"
+    },
+    {
+      name  = "LOG_LEVEL"
+      value = "info"
+    }
+  ]
+
+  # Health check robusto para produção
+  service_healthcheck = {
+    healthy_threshold   = "3"
+    unhealthy_threshold = "5"
+    timeout             = "10"
+    interval            = "30"
+    matcher             = "200,201"
+    path                = "/health"
+  }
+}
+
+# =========================================
+# EXEMPLO 3: Microsserviço Java Spring Boot
+# =========================================
+module "microservice_java" {
+  source = "../"  # Caminho para o módulo
+
+  # Configurações básicas
+  region       = var.aws_region
+  service_name = "user-service"
+  cluster_name = "microservices-cluster"
+
+  # Rede
+  vpc_id          = var.vpc_id
+  private_subnets = var.private_subnet_ids
+
+  # Configurações do container (Java precisa de mais memória)
+  service_port   = 8080
+  service_cpu    = 1024   # 1 vCPU
+  service_memory = 2048   # 2 GB
+
+  # Load Balancer
+  service_listener = var.alb_listener_arn
+  service_hosts    = ["users.${var.domain_name}"]
+
+  # Execução
+  service_task_execution_role = data.aws_iam_role.ecs_task_execution_role.arn
+  service_launch_type         = "FARGATE"
+  service_task_count          = 2
+
+  # Variáveis de ambiente
+  environment_variables = [
+    {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = "production"
+    },
+    {
+      name  = "SERVER_PORT"
+      value = "8080"
+    },
+    {
+      name  = "JAVA_OPTS"
+      value = "-Xmx1024m -Xms512m"
+    }
+  ]
+
+  # Health check para Spring Boot Actuator
+  service_healthcheck = {
+    healthy_threshold   = "3"
+    unhealthy_threshold = "5"
+    timeout             = "30"  # Java pode demorar mais para responder
+    interval            = "60"
+    matcher             = "200"
+    path                = "/actuator/health"
+  }
+}
+
+# =========================================
+# OUTPUTS DOS EXEMPLOS
+# =========================================
+
+# Outputs do serviço Node.js
+output "nodejs_service_info" {
+  description = "Informações do serviço Node.js"
+  value = {
+    service_name      = module.api_nodejs_dev.ecs_service_name
+    service_arn       = module.api_nodejs_dev.ecs_service_arn
+    ecr_repository    = module.api_nodejs_dev.ecr_repository_url
+    log_group         = module.api_nodejs_dev.cloudwatch_log_group_name
+  }
+}
+
+# Outputs do serviço Python
+output "python_service_info" {
+  description = "Informações do serviço Python"
+  value = {
+    service_name      = module.api_python_prod.ecs_service_name
+    service_arn       = module.api_python_prod.ecs_service_arn
+    ecr_repository    = module.api_python_prod.ecr_repository_url
+    log_group         = module.api_python_prod.cloudwatch_log_group_name
+  }
+}
+
+# Outputs do serviço Java
+output "java_service_info" {
+  description = "Informações do serviço Java"
+  value = {
+    service_name      = module.microservice_java.ecs_service_name
+    service_arn       = module.microservice_java.ecs_service_arn
+    ecr_repository    = module.microservice_java.ecr_repository_url
+    log_group         = module.microservice_java.cloudwatch_log_group_name
+  }
+}
+
+# URLs dos repositórios ECR para facilitar o push de imagens
+output "ecr_push_commands" {
+  description = "Comandos para fazer push das imagens para o ECR"
+  value = {
+    nodejs = "docker push ${module.api_nodejs_dev.ecr_repository_url}:latest"
+    python = "docker push ${module.api_python_prod.ecr_repository_url}:latest"
+    java   = "docker push ${module.microservice_java.ecr_repository_url}:latest"
+  }
+}
