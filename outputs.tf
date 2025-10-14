@@ -28,16 +28,16 @@ output "ecs_task_definition_revision" {
 }
 
 # URL do repositório ECR criado
-output "ecr_repository_url" {
-  description = "URL do repositório ECR para push de imagens"
-  value       = aws_ecr_repository.main.repository_url
-}
+# output "ecr_repository_url" {
+#   description = "URL do repositório ECR para push de imagens"
+#   value       = local.ecr_repository_url
+# }
 
-# Nome do repositório ECR criado
-output "ecr_repository_name" {
-  description = "Nome do repositório ECR criado"
-  value       = aws_ecr_repository.main.name
-}
+# # Nome do repositório ECR criado
+# output "ecr_repository_name" {
+#   description = "Nome do repositório ECR criado"
+#   value       = local.ecr_repository_name
+# }
 
 # ARN do target group criado
 output "target_group_arn" {

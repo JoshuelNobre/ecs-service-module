@@ -29,8 +29,8 @@ resource "aws_ecs_task_definition" "main" {
       # Nome do container
       name = var.service_name
 
-      # Imagem do container (usando a imagem latest do ECR criado)
-      image = format("%s:latest", aws_ecr_repository.main.repository_url)
+      # Imagem do container (usando a imagem latest do ECR - existente ou criado)
+      image  = "550094086634.dkr.ecr.us-east-1.amazonaws.com/linux-tips-ecs-cluster/chip:latest"
 
       # Recursos de CPU e memória do container
       cpu    = var.service_cpu

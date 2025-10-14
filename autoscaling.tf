@@ -7,4 +7,7 @@ resource "aws_appautoscaling_target" "main" {
   # Configuração de escalabilidade
   min_capacity = var.task_minimum
   max_capacity = var.task_maximum
+
+  # Dependência explícita do serviço ECS
+  depends_on = [aws_ecs_service.main]
 }
