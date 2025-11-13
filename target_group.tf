@@ -5,7 +5,7 @@
 
 resource "aws_alb_target_group" "main" {
   # Nome do target group baseado no cluster e serviço
-  name = format("%s-%s", var.cluster_name, var.service_name)
+  name = substr(format("%s-%s", var.cluster_name, var.service_name), 0, 32)
 
   # Porta onde o target group receberá tráfego
   port = var.service_port
