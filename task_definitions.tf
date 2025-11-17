@@ -81,6 +81,8 @@ resource "aws_ecs_task_definition" "main" {
 
       # Variáveis de ambiente passadas para o container
       environment = var.environment_variables
+
+      secrets = var.secrets
     }
   ])
 }
