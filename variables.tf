@@ -21,7 +21,7 @@ variable "service_listener" {}
 variable "service_task_execution_role" {}
 
 variable "service_launch_type" {
-  type    = list(object({
+  type = list(object({
     capacity_provider = string
     weight            = number
   }))
@@ -121,7 +121,7 @@ variable "scale_in_cooldown" {
 
 # Tracking CPU
 variable "scale_tracking_cpu" {
-    default = 80
+  default = 80
 }
 
 # ECR Configuration
@@ -136,5 +136,16 @@ variable "alb_arn" {
 }
 
 variable "scale_tracking_requests" {
-    default     = 0
+  default = 0
+}
+
+variable "efs_volumes" {
+  type = list(object({
+    volume_name      = string
+    file_system_id   = string
+    file_system_root = string
+    mount_point      = string
+    read_only        = bool
+  }))
+  default = []
 }

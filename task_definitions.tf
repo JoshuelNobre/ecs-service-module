@@ -23,6 +23,18 @@ resource "aws_ecs_task_definition" "main" {
   # Role IAM que a aplicação dentro do container usará
   task_role_arn = var.service_task_execution_role
 
+  dynamic "volume" {
+    for_each = var.efs_volumes
+    content {
+      name = volume.value.volume_name
+      efs_volume_configuration {
+        file_system_id     = volume.value.file_system_id
+        root_directory     = volume.value.file_system_root
+        transit_encryption = "ENABLED"
+      }
+    }
+  }
+
   # Definição dos containers em formato JSON
   container_definitions = jsonencode([
     {
@@ -31,7 +43,7 @@ resource "aws_ecs_task_definition" "main" {
 
       # Imagem do container (usando a imagem latest do ECR - existente ou criado)
       # image  = "550094086634.dkr.ecr.us-east-1.amazonaws.com/linux-tips-ecs-cluster/chip:latest"
-      image  = var.container_image
+      image = var.container_image
 
       # Recursos de CPU e memória do container
       cpu    = var.service_cpu
@@ -58,6 +70,14 @@ resource "aws_ecs_task_definition" "main" {
           awslogs-stream-prefix = var.service_name
         }
       }
+
+      mountPoints = [
+        for volume in var.efs_volumes : {
+          sourceVolume  = volume.volume_name
+          containerPath = volume.mount_point
+          readOnly      = volume.read_only
+        }
+      ]
 
       # Variáveis de ambiente passadas para o container
       environment = var.environment_variables
