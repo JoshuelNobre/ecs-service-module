@@ -16,6 +16,14 @@ resource "aws_ecs_service" "main" {
   # Número desejado de tasks em execução
   desired_count = var.service_task_count
 
+  dynamic "service_registries" {
+    for_each = var.service_discovery_namespace != null ? [var.service_name] : []
+    content {
+      registry_arn   = aws_service_discovery_service.main[0].arn
+      container_name = service_registries.value
+    }
+  }
+
   # Tipo de lançamento (FARGATE ou EC2)
   # launch_type = var.service_launch_type
 

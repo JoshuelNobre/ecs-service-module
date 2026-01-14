@@ -54,7 +54,7 @@ variable "secrets" {
     valueFrom = string
   }))
   description = "Lista de secrets do parameter store ou do secrets manager"
-  default = []
+  default     = []
 }
 
 variable "capabilities" {
@@ -160,4 +160,8 @@ variable "efs_volumes" {
     read_only        = bool
   }))
   default = []
+}
+
+variable "service_discovery_namespace" {
+  default = null
 }
