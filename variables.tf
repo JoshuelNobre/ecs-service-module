@@ -58,7 +58,9 @@ variable "secrets" {
 }
 
 variable "capabilities" {
-  type = list(any)
+  type        = list(string)
+  default     = []
+  description = "Lista de capacidades, como EC2 ou FARGATE"
 }
 
 variable "scale_type" {
